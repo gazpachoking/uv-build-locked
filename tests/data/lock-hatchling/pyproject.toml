@@ -4,6 +4,11 @@ version = "0.1.0"
 dependencies = ["requests"]
 requires-python = ">=3.9"
 dynamic = ["optional-dependencies"]
+#[project.optional-dependencies]
+#aoe = ["httpx"]
+
+[dependency-groups]
+xtra = ["httpx[http2]"]
 
 [build-system]
 requires = ["hatchling"]
@@ -13,3 +18,4 @@ build-backend = "hatchling.build"
 only-include = ["foo.py"]
 
 [tool.hatch.metadata.hooks.build-locked]
+locked-groups = ["default", "xtra"]

@@ -71,11 +71,11 @@ def test_hatchling_backend(temp_dir: Path, data_base_path: Path, test_project: s
     wheel = build_wheel(project, temp_dir)
     assert set(wheel.requires_dist) == {
         "requests",
-        "certifi==2023.11.17; extra == 'locked'",
-        "charset-normalizer==3.3.2; extra == 'locked'",
-        "requests==2.31.0; extra == 'locked'",
-        "urllib3==2.1.0; extra == 'locked'",
-        "idna==3.6; extra == 'locked'",
+        "certifi==2024.12.14; extra == 'locked'",
+        "charset-normalizer==3.4.1; extra == 'locked'",
+        "requests==2.32.3; extra == 'locked'",
+        "urllib3==1.26.20; extra == 'locked'",
+        "idna==3.10; extra == 'locked'",
     }
 
 

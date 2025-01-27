@@ -1,5 +1,5 @@
 [project]
-name = "pdm-build-locked"
+name = "uv-build-locked"
 dynamic = ["version"]
 description = """
     pdm-build-locked is a pdm plugin to add locked packages as additional \
@@ -51,7 +51,7 @@ source = "scm"
 [tool.pdm.build]
 package-dir = "src"
 
-[tool.pdm.dev-dependencies]
+[dependency-groups]
 dev = [
     "pdm[pytest]>=2.20.0",
     "pytest>=7.4.0",
@@ -107,7 +107,7 @@ exclude = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--verbose --cov --cov-report=term --cov-report=html --cov-report=xml --cov-config=pyproject.toml"
+#addopts = "--verbose --cov --cov-report=term --cov-report=html --cov-report=xml --cov-config=pyproject.toml"
 
 [tool.coverage.run]
 branch = true

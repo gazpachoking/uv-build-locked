@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import os
+import pprint
+import subprocess
 import sys
 import warnings
 from collections.abc import MutableMapping
@@ -80,41 +82,38 @@ def update_metadata_with_locked(
     Raises:
         UnsupportedRequirement
     """
-    lockfile = root / "pdm.lock"
-    if "PDM_LOCKFILE" in os.environ:
-        lockfile = Path(os.environ["PDM_LOCKFILE"])
+    lockfile = root / "uv.lock"
     if not lockfile.exists():
-        warnings.warn("The lockfile doesn't exist, skip locking dependencies", UserWarning, stacklevel=1)
+        print(root)
+        warnings.warn(f"The lockfile doesn't exist, skip locking dependencies {root}", UserWarning, stacklevel=1)
         return
     with lockfile.open("rb") as f:
         lockfile_content = tomllib.load(f)
 
-    if "inherit_metadata" not in lockfile_content.get("metadata", {}).get("strategy", []):
-        warnings.warn(
-            "The lockfile doesn't support 'inherit_metadata' strategy, skip locking dependencies",
-            UserWarning,
-            stacklevel=1,
-        )
-        return
-
-    optional_groups = list(metadata.get("optional-dependencies", {}))
-    locked_groups = lockfile_content.get("metadata", {}).get("groups", [])
+    lockfile_metadata = None
+    for pkg in lockfile_content["package"]:
+        if pkg["name"] == metadata["name"]:
+            lockfile_metadata = pkg
+            break
+    else:
+        warnings.warn(f"{metadata['name']} not found in the lock file", UserWarning, stacklevel=1)
+    locked_groups = lockfile_metadata.get("dev-dependencies", {})
+    print(f"Locked groups: {locked_groups}")
     if groups is None:
-        groups = ["default", *optional_groups]
+        groups = ["default"]
     for group in groups:
         locked_group = get_locked_group_name(group)
-        if locked_group in optional_groups:
-            # already exists, don't override
-            continue
-        if group not in locked_groups:
+        if group not in ["default", *locked_groups]:
             print(f"Group {group} is not stored in the lockfile, skip locking dependencies for it.")
             continue
-        requirements: list[str] = []
-        for package in lockfile_content.get("package", []):
-            if group in package.get("groups", []):
-                try:
-                    requirements.append(requirement_dict_to_string(package))
-                except UnsupportedRequirement as e:
-                    print(f"Skipping unsupported requirement: {e}")
-
+        if group == "default":
+            args = []
+        else:
+            args = ["--only-group", group]
+        try:
+            export = subprocess.check_output(["uv", "--color=never", "export", "--frozen", "--no-hashes", "--no-emit-project", *args], cwd=root, timeout=20, encoding="utf-8", stderr=subprocess.PIPE)
+        except Exception as exc:
+            raise
+        requirements = [l for l in export.splitlines() if not l.startswith("#")]
+        print(requirements)
         metadata.setdefault("optional-dependencies", {})[locked_group] = requirements
